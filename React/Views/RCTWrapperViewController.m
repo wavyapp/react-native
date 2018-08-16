@@ -109,6 +109,7 @@ static UIView *RCTFindNavBarShadowViewInView(UIView *view)
      animated:animated];
 
     UINavigationBar *bar = self.navigationController.navigationBar;
+    [self.navigationController.navigationBar setShadowImage:[UIImage new]];
     bar.barTintColor = _navItem.barTintColor;
     bar.tintColor = _navItem.tintColor;
     bar.translucent = _navItem.translucent;
