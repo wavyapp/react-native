@@ -302,7 +302,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
 
   if (_onTextInput) {
     _onTextInput(@{
-      @"text": _predictedText,
+      @"text": text,
       @"previousText": previousText,
       @"range": @{
         @"start": @(range.location),
@@ -310,7 +310,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
       },
       @"eventCount": @(_nativeEventCount),
     });
-    return NO;
   }
 
   return YES;
