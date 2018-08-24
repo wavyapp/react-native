@@ -302,7 +302,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
 
   if (_onTextInput) {
     _onTextInput(@{
-      @"text": text,
+      @"text": _predictedText,
       @"previousText": previousText,
       @"range": @{
         @"start": @(range.location),
@@ -310,8 +310,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
       },
       @"eventCount": @(_nativeEventCount),
     });
+    if (_maxLength && [_maxLength intValue] == -100) {
+      return NO;
+    }
   }
-
   return YES;
 }
 
@@ -428,12 +430,25 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
 
 - (void)didSetProps:(NSArray<NSString *> *)changedProps
 {
+  [self shouldHandleSecureTextEntryChange:changedProps];
   if ([changedProps containsObject:@"inputAccessoryViewID"] && self.inputAccessoryViewID) {
     [self setCustomInputAccessoryViewWithNativeID:self.inputAccessoryViewID];
   } else if (!self.inputAccessoryViewID) {
     [self setDefaultInputAccessoryView];
   }
 }
+
+- (void)shouldHandleSecureTextEntryChange:(NSArray<NSString *> *)changedProps
+{
+  BOOL didSecureTextEntryUpdate = [changedProps containsObject: @"secureTextEntry"];
+  if (didSecureTextEntryUpdate) {
+    NSAttributedString *originalText = self.backedTextInputView.attributedText;
+    
+    self.backedTextInputView.attributedText = nil;
+    self.backedTextInputView.attributedText = originalText;
+  }
+}
+
 
 - (void)setCustomInputAccessoryViewWithNativeID:(NSString *)nativeID
 {
