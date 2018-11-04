@@ -109,6 +109,7 @@ static UIView *RCTFindNavBarShadowViewInView(UIView *view)
      animated:animated];
 
     UINavigationBar *bar = self.navigationController.navigationBar;
+    [self.navigationController.navigationBar setShadowImage:[UIImage new]];
     bar.barTintColor = _navItem.barTintColor;
     bar.tintColor = _navItem.tintColor;
     bar.translucent = _navItem.translucent;
@@ -116,7 +117,8 @@ static UIView *RCTFindNavBarShadowViewInView(UIView *view)
     bar.barStyle = _navItem.barStyle;
 #endif
     bar.titleTextAttributes = _navItem.titleTextColor ? @{
-      NSForegroundColorAttributeName: _navItem.titleTextColor
+      NSForegroundColorAttributeName: _navItem.titleTextColor,
+      NSFontAttributeName: [UIFont fontWithName:@"Whitney-Semibold" size:18.0]
     } : nil;
 
     RCTFindNavBarShadowViewInView(bar).hidden = _navItem.shadowHidden;
