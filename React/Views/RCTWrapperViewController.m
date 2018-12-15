@@ -27,6 +27,8 @@
   id<UILayoutSupport> _currentBottomLayoutGuide;
 }
 
+@synthesize navItem = _navItem;
+
 - (instancetype)initWithContentView:(UIView *)contentView
 {
   RCTAssertParam(contentView);
@@ -97,10 +99,40 @@ static UIView *RCTFindNavBarShadowViewInView(UIView *view)
   return nil;
 }
 
+- (void)setNavItem:(RCTNavItem *)navItem;
+{
+  if (navItem != _navItem)
+  {
+    // stop observing of current item if possible
+    [self stopNavigationItemChangeObserving];
+    _navItem = navItem;
+    // start observing for new nav item if possible
+    [self startNavigationItemChangeObserving];
+  }
+}
+
 - (void)viewWillAppear:(BOOL)animated
 {
   [super viewWillAppear:animated];
+  [self updateNavigationBar:animated];
+  // begin nav item observation if not already started
+  [self startNavigationItemChangeObserving];
+}
 
+ - (void)viewWillDisappear:(BOOL)animated
+{
+  [super viewWillDisappear:animated];
+  // do not observing nav item changes anymore
+  [self stopNavigationItemChangeObserving];
+}
+
+ - (void)dealloc {
+  // remove possibly set nav item observer
+  [self stopNavigationItemChangeObserving];
+}
+
+ - (void)updateNavigationBar:(BOOL)animated
+{
   // TODO: find a way to make this less-tightly coupled to navigation controller
   if ([self.parentViewController isKindOfClass:[UINavigationController class]])
   {
@@ -109,6 +141,7 @@ static UIView *RCTFindNavBarShadowViewInView(UIView *view)
      animated:animated];
 
     UINavigationBar *bar = self.navigationController.navigationBar;
+    [self.navigationController.navigationBar setShadowImage:[UIImage new]];
     bar.barTintColor = _navItem.barTintColor;
     bar.tintColor = _navItem.tintColor;
     bar.translucent = _navItem.translucent;
@@ -116,7 +149,8 @@ static UIView *RCTFindNavBarShadowViewInView(UIView *view)
     bar.barStyle = _navItem.barStyle;
 #endif
     bar.titleTextAttributes = _navItem.titleTextColor ? @{
-      NSForegroundColorAttributeName: _navItem.titleTextColor
+      NSForegroundColorAttributeName: _navItem.titleTextColor,
+      NSFontAttributeName: [UIFont fontWithName:@"Whitney-Semibold" size:18.0]
     } : nil;
 
     RCTFindNavBarShadowViewInView(bar).hidden = _navItem.shadowHidden;
@@ -129,6 +163,34 @@ static UIView *RCTFindNavBarShadowViewInView(UIView *view)
 #endif //TARGET_OS_TV
     item.leftBarButtonItem = _navItem.leftButtonItem;
     item.rightBarButtonItem = _navItem.rightButtonItem;
+  }
+}
+
+- (void)startNavigationItemChangeObserving
+{
+  // starts observing for nav item property changes if not
+  // not already listen for
+  if (_navItem && !_navItemObserving) {
+    _navItemObserving = true;
+    [_navItem addObserver:self forKeyPath:@"propertiesChanged" options:NSKeyValueObservingOptionNew context:nil];
+  }
+}
+ - (void)stopNavigationItemChangeObserving
+{
+  // stops observing the current nav item for property changes
+  // if item is valid and observed before
+  if (_navItem && _navItemObserving) {
+    @try {
+      _navItemObserving = false;
+      [_navItem removeObserver:self forKeyPath:@"propertiesChanged"];
+    }
+    @catch (NSException * __unused exception) {}
+  }
+}
+ - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
+{
+  if (object == _navItem) {
+    [self updateNavigationBar:false];
   }
 }
 
